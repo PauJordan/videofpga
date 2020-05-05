@@ -5,6 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity vga_port_test is
     Port ( 
            CLK100MHZ, BTNR : in STD_LOGIC;
+           --JC :  out std_logic_vector(7 downto 0); -- DEBUG scope probe
            SW : in STD_LOGIC_VECTOR (15 downto 0);
            VGA_R : out STD_LOGIC_VECTOR (3 downto 0);
            VGA_G : out STD_LOGIC_VECTOR (3 downto 0);
@@ -83,19 +84,23 @@ architecture vga_port_test_arc of vga_port_test is
   signal RGB_s : std_logic_vector(11 downto 0);
   signal cam_xvclk : std_logic;
   --  prova i2c, interface i2c master 
-  signal i2c_ena, i2c_rw, i2c_busy, i2c_ack_err : std_logic; --activa lecutra de comanda (lectura o escriptura depenent de rw) per al master i2c i si esta ocupat del master i2c
+  signal i2c_ena, i2c_rw, i2c_busy, i2c_ack_err, i2c_rst : std_logic; --activa lecutra de comanda (lectura o escriptura depenent de rw) per al master i2c i si esta ocupat del master i2c
   signal i2c_addr, i2c_data_wr, i2c_data_rd : std_logic_vector(7 downto 0); -- adreça, data in i data out per al master i2c
+  signal i2c_scl, i2c_sda : std_logic;
   --maquina d'estats obtenció numero de serie de la camara
   type machine is(start, command_wr, assert_wait, camera_wait, get_data); --needed states
   signal state : machine;  --maquina d'estats
 begin
-
-
+--JC(0) <= i2C_SCL; --debug 
+--JC(1) <= i2C_SDA; --debug
+--JC(2) <= cam_xvclk; -- debug
 C_PWDN <= SW(0);
 C_Pclk <= 'Z';
 C_XVclk <= cam_xvclk; --cam_xvclk;
 C_HR <= 'Z';
 C_VS <= 'Z';
+--C_SCL <= i2c_scl;
+--C_SDA <= I2C_sda;
 
 
 with disp_s select rgb_mask <=  (others => '0') when '0',
@@ -123,14 +128,16 @@ process(CLK100MHZ)
          else
             case state is
                 when start =>
+                    i2c_rst <= '0'; --reset i2c master component
                     LED(11) <= '1';
-                    if(counter_100ms < 100000000) then   --100ms not yet reached
+                    if(counter_100ms < 10000000) then   --100ms not yet reached
                         counter_100ms := counter_100ms + 1;              --increment counter
                     else                                 --100ms reached
                         counter_100ms := 0;                        --clear counter
                         state <= command_wr;             --advance to setting the resolution
                         end if;
                 when command_wr =>
+                    i2c_rst <= '1'; -- i2c master ready
                     LED(12) <= '1';
                     i2c_addr <= x"21"; -- i2c adress of camera ov7675
                     i2c_rw <= '1'; -- '1' for read
@@ -148,6 +155,7 @@ process(CLK100MHZ)
                     LED(8) <= '1';
                     LED(15) <= i2c_ack_err;
                     LED(7 downto 0) <= i2c_data_rd;
+                    state <= start;
                 end case;
             end if;
         end if;
@@ -181,7 +189,7 @@ pixel_presc: prescaler_4 port map ( CLK     => CLK100MHZ,
    
    i2c_master_1: i2c_master
                        generic map(input_clk => 100000000, bus_clk => 10000)
-       port map(clk => CLK100MHZ, reset_n => BTNR, ena => i2c_ena, addr => i2c_addr(6 downto 0),
+       port map(clk => CLK100MHZ, reset_n => i2c_rst, ena => i2c_ena, addr => i2c_addr(6 downto 0),
                 rw => i2c_rw, data_wr => i2c_data_wr, busy => i2c_busy,
                 data_rd => i2c_data_rd, ack_error => i2c_ack_err, sda => C_sda,
                 scl => C_scl);
