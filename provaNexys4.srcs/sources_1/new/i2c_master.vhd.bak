@@ -23,9 +23,9 @@
 --     Corrected timing of when ack_error signal clears
 --   Version 2.1 10/21/2014 Scott Larson
 --     Replaced gated clock with clock enable
---     Adjusted timing of SCL during start and stop conditions
+--     Adjusted timing of scl_in during start and stop conditions
 --   Version 2.2 02/05/2015 Scott Larson
---     Corrected small SDA glitch introduced in version 2.1
+--     Corrected small sda_in glitch introduced in version 2.1
 -- 
 --------------------------------------------------------------------------------
 
@@ -36,7 +36,7 @@ USE ieee.std_logic_unsigned.all;
 ENTITY i2c_master IS
   GENERIC(
     input_clk : INTEGER := 100_000_000; --input clock speed from user logic in Hz
-    bus_clk   : INTEGER := 25_000);   --speed the i2c bus (scl) will run at in Hz
+    bus_clk   : INTEGER := 25_000);   --speed the i2c bus (scl_in) will run at in Hz
   PORT(
     clk       : IN     STD_LOGIC;                    --system clock
     reset_n   : IN     STD_LOGIC;                    --active low reset
@@ -47,25 +47,25 @@ ENTITY i2c_master IS
     busy      : OUT    STD_LOGIC;                    --indicates transaction in progress
     data_rd   : OUT    STD_LOGIC_VECTOR(7 DOWNTO 0); --data read from slave
     ack_error : BUFFER STD_LOGIC;                    --flag if improper acknowledge from slave
-    sda       : INOUT  STD_LOGIC;                    --serial data output of i2c bus
-    scl       : INOUT  STD_LOGIC);                   --serial clock output of i2c bus
+    sda_in       : INOUT  STD_LOGIC;                    --serial data output of i2c bus
+    scl_in       : INOUT  STD_LOGIC);                   --serial clock output of i2c bus
 END i2c_master;
 
 ARCHITECTURE logic OF i2c_master IS
-  CONSTANT divider  :  INTEGER := (input_clk/bus_clk)/4; --number of clocks in 1/4 cycle of scl
+  CONSTANT divider  :  INTEGER := (input_clk/bus_clk)/4; --number of clocks in 1/4 cycle of scl_in
   TYPE machine IS(ready, start, command, slv_ack1, wr, rd, slv_ack2, mstr_ack, stop); --needed states
   SIGNAL state         : machine;                        --state machine
-  SIGNAL data_clk      : STD_LOGIC;                      --data clock for sda
+  SIGNAL data_clk      : STD_LOGIC;                      --data clock for sda_in
   SIGNAL data_clk_prev : STD_LOGIC;                      --data clock during previous system clock
-  SIGNAL scl_clk       : STD_LOGIC;                      --constantly running internal scl
-  SIGNAL scl_ena       : STD_LOGIC := '0';               --enables internal scl to output
-  SIGNAL sda_int       : STD_LOGIC := '1';               --internal sda
-  SIGNAL sda_ena_n     : STD_LOGIC;                      --enables internal sda to output
+  SIGNAL scl_clk       : STD_LOGIC;                      --constantly running internal scl_in
+  SIGNAL scl_ena       : STD_LOGIC := '0';               --enables internal scl_in to output
+  SIGNAL sda_int       : STD_LOGIC := '1';               --internal sda_in
+  SIGNAL sda_ena_n     : STD_LOGIC;                      --enables internal sda_in to output
   SIGNAL addr_rw       : STD_LOGIC_VECTOR(7 DOWNTO 0);   --latched in address and read/write
   SIGNAL data_tx       : STD_LOGIC_VECTOR(7 DOWNTO 0);   --latched in data to write to slave
   SIGNAL data_rx       : STD_LOGIC_VECTOR(7 DOWNTO 0);   --data received from slave
   SIGNAL bit_cnt       : INTEGER RANGE 0 TO 7 := 7;      --tracks bit number in transaction
-  SIGNAL stretch       : STD_LOGIC := '0';               --identifies if slave is stretching scl
+  SIGNAL stretch       : STD_LOGIC := '0';               --identifies if slave is stretching scl_in
 BEGIN
 
   --generate the timing for the bus clock (scl_clk) and the data clock (data_clk)
@@ -90,8 +90,8 @@ BEGIN
           scl_clk <= '0';
           data_clk <= '1';
         WHEN divider*2 TO divider*3-1 =>  --third 1/4 cycle of clocking
-          scl_clk <= '1';                 --release scl
-          IF(scl = '0') THEN              --detect if slave is stretching clock
+          scl_clk <= '1';                 --release scl_in
+          IF(scl_in = '0') THEN              --detect if slave is stretching clock
             stretch <= '1';
           ELSE
             stretch <= '0';
@@ -104,15 +104,15 @@ BEGIN
     END IF;
   END PROCESS;
 
-  --state machine and writing to sda during scl low (data_clk rising edge)
+  --state machine and writing to sda_in during scl_in low (data_clk rising edge)
   PROCESS(clk, reset_n)
   BEGIN
     IF(clk'EVENT AND clk = '1') THEN
 	  IF(reset_n = '0') THEN                 --reset asserted
       	state <= ready;                      --return to initial state
       	busy <= '1';                         --indicate not available
-      	scl_ena <= '0';                      --sets scl high impedance
-      	sda_int <= '1';                      --sets sda high impedance
+      	scl_ena <= '0';                      --sets scl_in high impedance
+      	sda_int <= '1';                      --sets sda_in high impedance
       	ack_error <= '0';                    --clear acknowledge error flag
       	bit_cnt <= 7;                        --restarts data bit counter
       	data_rd <= "00000000";               --clear data read port
@@ -134,7 +134,7 @@ BEGIN
             state <= command;                --go to command
           WHEN command =>                    --address and command byte of transaction
             IF(bit_cnt = 0) THEN             --command transmit finished
-              sda_int <= '1';                --release sda for slave acknowledge
+              sda_int <= '1';                --release sda_in for slave acknowledge
               bit_cnt <= 7;                  --reset bit counter for "byte" states
               state <= slv_ack1;             --go to slave acknowledge (command)
             ELSE                             --next clock cycle of command state
@@ -147,13 +147,13 @@ BEGIN
               sda_int <= data_tx(bit_cnt);   --write first bit of data
               state <= wr;                   --go to write byte
             ELSE                             --read command
-              sda_int <= '1';                --release sda from incoming data
+              sda_int <= '1';                --release sda_in from incoming data
               state <= rd;                   --go to read byte
             END IF;
           WHEN wr =>                         --write byte of transaction
             busy <= '1';                     --resume busy if continuous mode
             IF(bit_cnt = 0) THEN             --write byte transmit finished
-              sda_int <= '1';                --release sda for slave acknowledge
+              sda_int <= '1';                --release sda_in for slave acknowledge
               bit_cnt <= 7;                  --reset bit counter for "byte" states
               state <= slv_ack2;             --go to slave acknowledge (write)
             ELSE                             --next clock cycle of write state
@@ -196,7 +196,7 @@ BEGIN
               addr_rw <= addr & rw;          --collect requested slave address and command
               data_tx <= data_wr;            --collect requested data to write
               IF(addr_rw = addr & rw) THEN   --continue transaction with another read
-                sda_int <= '1';              --release sda from incoming data
+                sda_int <= '1';              --release sda_in from incoming data
                 state <= rd;                 --go to read byte
               ELSE                           --continue transaction with a write or new slave
                 state <= start;              --repeated start
@@ -212,21 +212,21 @@ BEGIN
         CASE state IS
           WHEN start =>                  
             IF(scl_ena = '0') THEN                  --starting new transaction
-              scl_ena <= '1';                       --enable scl output
+              scl_ena <= '1';                       --enable scl_in output
               ack_error <= '0';                     --reset acknowledge error output
             END IF;
           WHEN slv_ack1 =>                          --receiving slave acknowledge (command)
-            IF(sda /= '0' OR ack_error = '1') THEN  --no-acknowledge or previous no-acknowledge
+            IF(sda_in /= '0' OR ack_error = '1') THEN  --no-acknowledge or previous no-acknowledge
               ack_error <= '1';                     --set error output if no-acknowledge
             END IF;
           WHEN rd =>                                --receiving slave data
-            data_rx(bit_cnt) <= sda;                --receive current slave data bit
+            data_rx(bit_cnt) <= sda_in;                --receive current slave data bit
           WHEN slv_ack2 =>                          --receiving slave acknowledge (write)
-            IF(sda /= '0' OR ack_error = '1') THEN  --no-acknowledge or previous no-acknowledge
+            IF(sda_in /= '0' OR ack_error = '1') THEN  --no-acknowledge or previous no-acknowledge
               ack_error <= '1';                     --set error output if no-acknowledge
             END IF;
           WHEN stop =>
-            scl_ena <= '0';                         --disable scl
+            scl_ena <= '0';                         --disable scl_in
           WHEN OTHERS =>
             NULL;
         END CASE;
@@ -234,14 +234,14 @@ BEGIN
     END IF;
   END PROCESS;  
 
-  --set sda output
+  --set sda_in output
   WITH state SELECT
     sda_ena_n <= data_clk_prev WHEN start,     --generate start condition
                  NOT data_clk_prev WHEN stop,  --generate stop condition
-                 sda_int WHEN OTHERS;          --set to internal sda signal    
+                 sda_int WHEN OTHERS;          --set to internal sda_in signal    
       
-  --set scl and sda outputs
-  scl <= '0' WHEN (scl_ena = '1' AND scl_clk = '0') ELSE 'Z';
-  sda <= '0' WHEN sda_ena_n = '0' ELSE 'Z';
+  --set scl_in and sda_in outputs
+  scl_in <= '0' WHEN (scl_ena = '1' AND scl_clk = '0') ELSE 'Z';
+  sda_in <= '0' WHEN sda_ena_n = '0' ELSE 'Z';
   
 END logic;

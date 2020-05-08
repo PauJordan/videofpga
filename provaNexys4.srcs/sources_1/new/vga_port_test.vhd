@@ -24,12 +24,14 @@ entity vga_port_test is
 end vga_port_test;
 
 architecture vga_port_test_arc of vga_port_test is
-    component prescaler_4
+ 	--Declaració Components:   
+	component prescaler_4
         Port ( CLK, RST : in STD_LOGIC;
               PIXEL_C : out STD_LOGIC);
         end component;
+	
     component vga_sync_gen
-          generic (
+    	generic (
               h_pixels : integer := 800;
               h_sync : integer := 96;
               h_start_pixel : integer := 144;
@@ -40,14 +42,15 @@ architecture vga_port_test_arc of vga_port_test is
               v_end_line : integer := 511;
               h_bits : integer := 10;
               v_bits : integer := 10);
-      Port ( CLK, RST : in STD_LOGIC;
+      	Port ( CLK, RST : in STD_LOGIC;
              E : in STD_LOGIC;
              HS : out STD_LOGIC;
              VS : out STD_LOGIC;
              PIXEL_X : out unsigned(h_bits - 1 downto 0);
              PIXEL_Y : out unsigned(v_bits - 1 downto 0);
              DISPLAY_E : out STD_LOGIC);
-  end component;
+  	end component;
+
 --  component cross_generator
 --        Port ( PX : in unsigned(9 downto 0);
 --               PY : in unsigned(9 downto 0);
@@ -55,28 +58,21 @@ architecture vga_port_test_arc of vga_port_test is
 --               RGB_out : out STD_LOGIC_VECTOR (11 downto 0);
 --               TIMING_IN : in STD_LOGIC);
 --    end component;
-  component xvclk_gen --prova generador system clock.
+
+	component xvclk_gen --prova generador system clock.
         Port ( CLK, RST  : in STD_LOGIC;
                CLK4 : out STD_LOGIC);
     end component;
-    component i2c_master is --declaració i2c master
-    generic(
-     input_clk : integer;  --input clock speed from user logic in hz
-     bus_clk   : integer); --speed the i2c bus (scl) will run at in hz
-    port(
-     clk       : in     std_logic;                    --system clock
-     reset_n   : in     std_logic;                    --active low reset
-     ena       : in     std_logic;                    --latch in command
-     addr      : in     std_logic_vector(6 downto 0); --address of target slave
-     rw        : in     std_logic;                    --'0' is write, '1' is read
-     data_wr   : in     std_logic_vector(7 downto 0); --data to write to slave
-     busy      : out    std_logic;                    --indicates transaction in progress
-     data_rd   : out    std_logic_vector(7 downto 0); --data read from slave
-     ack_error : buffer std_logic;                    --flag if improper acknowledge from slave
-     sda       : inout  std_logic;                    --serial data output of i2c bus
-     scl       : inout  std_logic);                   --serial clock output of i2c bus
-  end component;
-  
+
+    component cam_com										
+      Port ( 	
+			CLK, RST : in STD_LOGIC;
+           	C_SDA : inout STD_LOGIC;
+           	C_SCL : inout STD_LOGIC;
+	   		C_Data : inout STD_LOGIC_vector(7 downto 0);
+			 );
+  	end component;
+  	
   signal pixel_presc_s, disp_s, VGA_VS_s : std_logic;
   signal RST : std_logic;
   signal rgb_mask : std_logic_vector(3 downto 0);

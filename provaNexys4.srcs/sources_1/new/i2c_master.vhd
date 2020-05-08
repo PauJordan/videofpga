@@ -55,12 +55,12 @@ ARCHITECTURE logic OF i2c_master IS
   CONSTANT divider  :  INTEGER := (input_clk/bus_clk)/4; --number of clocks in 1/4 cycle of scl_in
   TYPE machine IS(ready, start, command, slv_ack1, wr, rd, slv_ack2, mstr_ack, stop); --needed states
   SIGNAL state         : machine;                        --state machine
-  SIGNAL data_clk      : STD_LOGIC;                      --data clock for sda_in
+  SIGNAL data_clk      : STD_LOGIC;                      --data clock for sda
   SIGNAL data_clk_prev : STD_LOGIC;                      --data clock during previous system clock
-  SIGNAL scl_clk       : STD_LOGIC;                      --constantly running internal scl_in
-  SIGNAL scl_ena       : STD_LOGIC := '0';               --enables internal scl_in to output
-  SIGNAL sda_int       : STD_LOGIC := '1';               --internal sda_in
-  SIGNAL sda_ena_n     : STD_LOGIC;                      --enables internal sda_in to output
+  SIGNAL scl_clk       : STD_LOGIC;                      --constantly running internal scl
+  SIGNAL scl_ena       : STD_LOGIC := '0';               --enables internal scl to output
+  SIGNAL sda_int       : STD_LOGIC := '1';               --internal sda
+  SIGNAL sda_ena_n     : STD_LOGIC;                      --enables internal sda to output
   SIGNAL addr_rw       : STD_LOGIC_VECTOR(7 DOWNTO 0);   --latched in address and read/write
   SIGNAL data_tx       : STD_LOGIC_VECTOR(7 DOWNTO 0);   --latched in data to write to slave
   SIGNAL data_rx       : STD_LOGIC_VECTOR(7 DOWNTO 0);   --data received from slave
