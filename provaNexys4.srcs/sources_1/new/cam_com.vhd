@@ -26,14 +26,16 @@ component i2c_master is --declaració i2c master
      busy      : out    std_logic;                    --indicates transaction in progress
      data_rd   : out    std_logic_vector(7 downto 0); --data read from slave
      ack_error : buffer std_logic;                    --flag if improper acknowledge from slave
-     sda       : inout  std_logic;                    --serial data output of i2c bus
-     scl       : inout  std_logic);                   --serial clock output of i2c bus
+     sda_in       : IN  STD_LOGIC;                    --serial data input of i2c bus
+     scl_in       : IN  STD_LOGIC;                    --serial clock input of i2c busto detect time streching
+   	 sda_out, sda_out_ena : OUT STD_LOGIC;             --serial data output and output enable of i2c bus
+     scl_out, scl_out_ena : OUT STD_LOGIC);              --serial clock output and output enable of i2c bus
   end component;
 
   --  prova i2c, interface i2c master 
   signal i2c_ena, i2c_rw, i2c_busy, i2c_ack_err, i2c_rst_n : std_logic; --activa lecutra de comanda (lectura o escriptura depenent de rw) per al master i2c i si esta ocupat del master i2c
   signal i2c_addr, i2c_data_wr, i2c_data_rd : std_logic_vector(7 downto 0); -- adreça, data in i data out per al master i2c
-  signal i2c_scl, i2c_sda : std_logic;
+  signal i2c_scl, i2c_sda, i2c_sda_out_ena, i2c_scl_out_ena : std_logic;
   --maquina d'estats obtenció numero de serie de la camara
   type machine is(start, command_wr, assert_wait, camera_wait, get_data); --needed states
   signal state : machine;  --maquina d'estats
@@ -81,8 +83,23 @@ process(CLK)
 
    i2c_master_1: i2c_master
                        generic map(input_clk => 100000000, bus_clk => 100000)
-       port map(clk => CLK, reset_n => i2c_rst_n, ena => i2c_ena, addr => i2c_addr(7 downto 1),
-                rw => i2c_rw, data_wr => i2c_data_wr, busy => i2c_busy,
-                data_rd => i2c_data_rd, ack_error => i2c_ack_err, sda => C_sda,
-                scl => C_scl);
+       port map(clk => CLK, 
+		reset_n => i2c_rst_n, 
+		ena => i2c_ena, 
+		addr => i2c_addr(7 downto 1),
+        rw => i2c_rw, 
+		data_wr => i2c_data_wr, 
+		busy => i2c_busy,
+        data_rd => i2c_data_rd, 
+		ack_error => i2c_ack_err, 
+		sda_in => C_sda,
+        scl_in => C_scl,
+		sda_out => i2c_sda,
+		scl_out => i2c_scl,
+		sda_out_ena => i2c_sda_out_ena,
+		scl_out_ena => i2c_scl_out_ena);
+
+		C_sda <= i2c_sda when i2c_sda_out_ena = '1' else 'Z';
+		C_scl <= i2c_scl when i2c_scl_out_ena = '1' else 'Z';
+		
 end cam_com_arc;
