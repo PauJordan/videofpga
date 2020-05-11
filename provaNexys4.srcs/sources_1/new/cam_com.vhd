@@ -8,14 +8,14 @@ entity cam_com is
         ini_us : integer := 10000000);
     Port ( 
            CLK, RST : in STD_LOGIC;
-           CC_BUSY : out std_logic := '1'; -- Indicates cam_com is currently performing and operation
-           CC_ENABLE : in std_logic; --Indicates cam_com to latch command and start execution
-           CC_REGADDR : in std_logic_vector(7 downto 0); -- Register adress cam_com has to set the register pointer in the slave to read/write
-           CC_READ : in std_logic; -- High for read, low for write
+           BUSY : out std_logic := '1'; -- Indicates cam_com is currently performing and operation
+           ENABLE : in std_logic; --Indicates cam_com to latch command and start execution
+           REGADDR : in std_logic_vector(7 downto 0); -- Register adress cam_com has to set the register pointer in the slave to read/write
+           RW : in std_logic; -- High for read, low for write
            C_SDA : inout STD_LOGIC; 
            C_SCL : inout STD_LOGIC;
-           CC_ERROR : out std_logic := '0'; --Indicates error if high
-		   CC_Data : inout STD_LOGIC_vector(7 downto 0));
+           ERROR : out std_logic := '0'; --Indicates error if high
+		   Data, Data_rd : inout STD_LOGIC_vector(7 downto 0));
 end cam_com;
 
 architecture cam_com_arc of cam_com is
@@ -50,9 +50,9 @@ component i2c_master is --declaració i2c master
   signal state : machine;  --maquina d'estats
   --cam_com interface
   signal reg_addr, reg_data : std_logic_vector(7 downto 0);
-  signal reg_read, CC_ERROR_s: std_logic;
+  signal reg_read, ERROR_s: std_logic;
 begin
-CC_ERROR <=  CC_ERROR_s;
+ERROR <=  ERROR_s;
 process(CLK)
     -- variable busy_cnt : integer range 0 to 2 := 0; --counts the busy signal transistions during one transaction
     variable counter_ini  : integer range 0 to ini_us := 0; --counts x ms to wait before communicating   
@@ -60,8 +60,8 @@ process(CLK)
     if(CLK'event and CLK = '1') then
         if(RST = '1') then
             state <= start;
-			CC_BUSY <= '1';
-			CC_ERROR_s <= '0';
+			BUSY <= '1';
+			ERROR_s <= '0';
             counter_ini := 0;         --clear wait counter
             i2c_ena <= '0';             --clear i2c enable
 			i2c_rst_n <= '0';
@@ -76,14 +76,14 @@ process(CLK)
                         state <= ready;             --advance to next state
                         end if;
 				when ready =>
-					CC_BUSY <= '0';
-					if(CC_ENABLE = '1') then state <= latch_command; end if;
+					BUSY <= '0';
+					if(ENABLE = '1') then state <= latch_command; end if;
 				when latch_command =>
-					CC_ERROR_s <= '0';
-					CC_Busy <= '1'; --Indicate cam com is performing command
-					reg_data <= CC_DATA; --Latch in data
-					reg_addr <= CC_REGADDR; --Latch in reg addr
-					reg_read <= CC_READ; --Latch in read/not write
+					ERROR_s <= '0';
+					Busy <= '1'; --Indicate cam com is performing command
+					reg_data <= DATA; --Latch in data
+					reg_addr <= REGADDR; --Latch in reg addr
+					reg_read <= RW; --Latch in read/not write
 					state <= wait_i2c;
 				when wait_i2c =>
 					if(i2c_busy = '0') then state <= write_regaddr; end if;
@@ -98,15 +98,15 @@ process(CLK)
 					i2c_data_wr <= reg_data; --register address                    
                     if(i2c_busy = '0') then state <= wait_i2c_2; end if;-- change state when i2c master acknowledges command
 				when wait_i2c_2 =>
-					CC_ERROR_s <= i2c_ack_err;
+					ERROR_s <= i2c_ack_err;
 					if(i2c_busy = '1') then state <= wait_slave_2; end if;-- change state when i2c master acknowledges command
 				when wait_slave_2 =>
 					i2c_ena <= '0';                  
                     if(i2c_busy = '0') then state <= get_data; end if;-- change state when i2c master acknowledges command
                 when get_data =>
-                    CC_ERROR_s <= i2c_ack_err OR CC_ERROR_s;
-					CC_DATA <= i2c_data_rd;
-					CC_BUSY <= '0';
+                    ERROR_s <= i2c_ack_err OR ERROR_s;
+					DATA_RD <= i2c_data_rd;
+					BUSY <= '0';
                     state <= ready;
                 end case;
             end if;
