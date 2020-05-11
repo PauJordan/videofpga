@@ -266,6 +266,13 @@ set_property -dict {PACKAGE_PIN B12 IOSTANDARD LVCMOS33} [get_ports VGA_VS]
 
 
 
+connect_debug_port u_ila_0/probe0 [get_nets [list {i2c_master_1/state[0]} {i2c_master_1/state[1]} {i2c_master_1/state[2]} {i2c_master_1/state[3]}]]
+connect_debug_port u_ila_0/probe3 [get_nets [list i2c_ena]]
+connect_debug_port u_ila_0/probe4 [get_nets [list i2c_rst]]
+connect_debug_port u_ila_0/probe5 [get_nets [list i2c_master_1/ack_error]]
+connect_debug_port u_ila_0/probe6 [get_nets [list i2c_master_1/i2c_busy]]
+
+
 create_debug_core u_ila_0 ila
 set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
 set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
@@ -278,32 +285,20 @@ set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
 set_property port_width 1 [get_debug_ports u_ila_0/clk]
 connect_debug_port u_ila_0/clk [get_nets [list CLK100MHZ_IBUF_BUFG]]
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
-set_property port_width 4 [get_debug_ports u_ila_0/probe0]
-connect_debug_port u_ila_0/probe0 [get_nets [list {i2c_master_1/state[0]} {i2c_master_1/state[1]} {i2c_master_1/state[2]} {i2c_master_1/state[3]}]]
+set_property port_width 1 [get_debug_ports u_ila_0/probe0]
+connect_debug_port u_ila_0/probe0 [get_nets [list C_SCL_TRI]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe1]
 set_property port_width 1 [get_debug_ports u_ila_0/probe1]
-connect_debug_port u_ila_0/probe1 [get_nets [list C_SCL_TRI]]
+connect_debug_port u_ila_0/probe1 [get_nets [list C_SDA_TRI]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe2]
 set_property port_width 1 [get_debug_ports u_ila_0/probe2]
-connect_debug_port u_ila_0/probe2 [get_nets [list C_SDA_TRI]]
+connect_debug_port u_ila_0/probe2 [get_nets [list C_SCL_IBUF]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe3]
 set_property port_width 1 [get_debug_ports u_ila_0/probe3]
-connect_debug_port u_ila_0/probe3 [get_nets [list i2c_ena]]
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe4]
-set_property port_width 1 [get_debug_ports u_ila_0/probe4]
-connect_debug_port u_ila_0/probe4 [get_nets [list i2c_rst]]
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe5]
-set_property port_width 1 [get_debug_ports u_ila_0/probe5]
-connect_debug_port u_ila_0/probe5 [get_nets [list i2c_master_1/ack_error]]
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe6]
-set_property port_width 1 [get_debug_ports u_ila_0/probe6]
-connect_debug_port u_ila_0/probe6 [get_nets [list i2c_master_1/i2c_busy]]
+connect_debug_port u_ila_0/probe3 [get_nets [list C_SDA_IBUF]]
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
 set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]

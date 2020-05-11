@@ -7,7 +7,9 @@ entity cam_com is
            CLK, RST : in STD_LOGIC;
            C_SDA : inout STD_LOGIC;
            C_SCL : inout STD_LOGIC;
-	   C_Data : inout STD_LOGIC_vector(7 downto 0));
+           
+	   C_Data : inout STD_LOGIC_vector(7 downto 0);
+	   i2c_trx_err : out std_logic);
 end cam_com;
 
 architecture cam_com_arc of cam_com is
@@ -37,7 +39,7 @@ component i2c_master is --declaració i2c master
   signal i2c_addr, i2c_data_wr, i2c_data_rd : std_logic_vector(7 downto 0); -- adreça, data in i data out per al master i2c
   signal i2c_scl, i2c_sda, i2c_sda_out_ena, i2c_scl_out_ena : std_logic;
   --maquina d'estats obtenció numero de serie de la camara
-  type machine is(start, command_wr, assert_wait, camera_wait, get_data); --needed states
+  type machine is(start, command_wr, command_rd, assert_wait, camera_wait, get_data); --needed states
   signal state : machine;  --maquina d'estats
 begin
 
@@ -55,7 +57,7 @@ process(CLK)
             case state is
                 when start =>
                     i2c_rst_n <= '1'; -- i2c master component ready
-                    if(counter_100ms < 10) then   --100ms not yet reached
+                    if(counter_100ms < 100000000) then   --100ms not yet reached
                         counter_100ms := counter_100ms + 1;              --increment counter
                     else                                 --100ms reached
                         counter_100ms := 0;                        --clear counter
@@ -63,18 +65,27 @@ process(CLK)
                         end if;
                 when command_wr =>
 					i2c_addr <= x"42"; -- i2c adress of camera ov7675
-                    i2c_rw <= '1'; -- '1' for read
+                    i2c_rw <= '0'; -- '1' for read
                     i2c_data_wr <= x"0A"; --register Product ID                    
-                    i2c_addr <= x"21"; -- i2c adress of camera ov7675
                     if(i2c_busy = '0') then state <= assert_wait; end if;-- change state when i2c master acknowledges command
                 when assert_wait =>
                     i2c_ena <= '1'; -- enable i2c master to assert command
                     if(i2c_busy = '1') then state <= camera_wait; end if;-- change state when i2c master acknowledges command
                 when camera_wait =>
                     i2c_ena <= '0'; -- deassert command i2c master
-                    if(i2c_busy = '0') then state <= get_data; end if;-- change state when i2c master is finished executing command
-                when get_data => -- when transaction ends, transfer data and output err code
+                    if(i2c_busy = '0') then
+                        if(i2c_rw = '1') then
+                            state <= get_data;
+                        else
+                            state <= command_rd;
+                        end if;    
+                    end if;-- change state when i2c master is finished executing command
+                when command_rd => -- when transaction ends, transfer data and output err code
+                    i2c_rw <= '1';
+                    if(i2c_busy = '0') then state <= assert_wait; end if;-- change state when i2c master acknowledges command
+                when get_data =>
                     C_data <= i2c_data_rd;
+                    i2c_trx_err <= i2c_ack_err; --output error flag
                     state <= start;
                 end case;
             end if;

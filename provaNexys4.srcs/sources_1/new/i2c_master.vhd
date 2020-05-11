@@ -51,7 +51,7 @@ ENTITY i2c_master IS
     scl_in       : IN  STD_LOGIC;                    --serial clock input of i2c busto detect time streching
     sda_out, sda_out_ena : OUT STD_LOGIC;             --serial data output and output enable of i2c bus
     scl_out, scl_out_ena : OUT STD_LOGIC              --serial clock output and output enable of i2c bus
-    );                   --serial clock output of i2c bus
+    );              
 END i2c_master;
 
 ARCHITECTURE logic OF i2c_master IS
