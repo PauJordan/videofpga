@@ -88,7 +88,7 @@ architecture vga_port_test_arc of vga_port_test is
     signal CC_Data, CC_Data_rd: STD_LOGIC_vector(7 downto 0);
   	
   --vga test signals
-    signal pixel_presc_s, disp_s, VGA_VS_s : std_logic;
+    signal pixel_presc_s, disp_s, VGA_VS_s, VGA_HR_s : std_logic;
     signal rgb_mask : std_logic_vector(3 downto 0);
     signal pixel_x_s, pixel_y_s : unsigned(9 downto 0);
     signal RGB_s : std_logic_vector(11 downto 0);
@@ -104,21 +104,26 @@ architecture vga_port_test_arc of vga_port_test is
 begin
 --Combinational Logic:
 --Camera control
-process(BTND)
-	begin
-	c_pwdn_S <= NOT C_PWDN_s;
-end process;
-C_PWDN <= C_PWDN_s;
+
+C_PWDN <= BTND;
 C_Pclk <= 'Z';
 C_XVclk <= cam_xvclk; --cam_xvclk;
-C_HR <= 'Z';
-C_VS <= 'Z';
 
 
-with disp_s select rgb_mask <=  (others => '0') when '0',
+
+with C_HR select rgb_mask <=  (others => '0') when '0',
                                 (others => '1') when others;
 RST <= BTNR;
-VGA_VS <= VGA_VS_s;
+
+with SW(0) select
+	VGA_VS <= 	C_VS when '0',
+				VGA_VS_s when others;
+with SW(0) select
+	VGA_HS <= 	C_HR when '0',
+				VGA_HR_s when others;
+		
+
+
 -- RGB_S(11 downto 8) and 
 -- RGB_s(7 downto 4) and 
 -- RGB_s(3 downto 0) and
@@ -162,7 +167,7 @@ pixel_presc: prescaler_4 port map ( CLK     => CLK100MHZ,
                        port map ( CLK           => CLK100MHZ,
                                   RST           => RST,
                                   E             => pixel_presc_s,
-                                  HS            => VGA_HS,
+                                  HS            => VGA_HR_s,
                                   VS            => VGA_VS_s,
                                   PIXEL_X => pixel_x_s,
                                   PIXEL_Y => pixel_y_s,
