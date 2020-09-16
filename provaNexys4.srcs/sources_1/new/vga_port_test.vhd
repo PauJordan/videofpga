@@ -5,7 +5,7 @@ use IEEE.NUMERIC_STD.ALL;
 entity vga_port_test is
     Port ( 
            CLK100MHZ, BTNR, BTNC, BTND : in STD_LOGIC;
-           --JC :  out std_logic_vector(7 downto 0); -- DEBUG scope probe
+           JC :  out std_logic_vector(7 downto 0); -- DEBUG scope probe
            SW : in STD_LOGIC_VECTOR (15 downto 0);
            VGA_R : out STD_LOGIC_VECTOR (3 downto 0);
            VGA_G : out STD_LOGIC_VECTOR (3 downto 0);
@@ -20,7 +20,9 @@ entity vga_port_test is
            C_PWDN : out STD_LOGIC;
            C_HR : inout STD_LOGIC;
            C_VS : inout STD_LOGIC;
-           LED : out STD_LOGIC_VECTOR (15 downto 0));
+           LED : out STD_LOGIC_VECTOR (15 downto 0);
+           JD : out STD_LOGIC_VECTOR (7 downto 0); --debug
+           LED16_R, LED16_G, LED16_B  : out STD_LOGIC);
 end vga_port_test;
 
 architecture vga_port_test_arc of vga_port_test is
@@ -80,6 +82,20 @@ architecture vga_port_test_arc of vga_port_test is
                Data, Data_rd : inout STD_LOGIC_vector(7 downto 0));
   	end component;
   	
+  	--Memory component declaration
+  	component blk_mem_gen_0 IS
+  	  Port (
+  	    clka : IN STD_LOGIC;
+  	    ena : IN STD_LOGIC;
+  	    --wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+  	    addra : IN STD_LOGIC_VECTOR(16 DOWNTO 0);
+  	    dina : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
+  	    clkb : IN STD_LOGIC;
+  	    addrb : IN STD_LOGIC_VECTOR(16 DOWNTO 0);
+  	    doutb : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
+  	  );
+  	end component;
+  	
   --Cam com signals
     signal CC_ENABLE, CC_BUSY: std_logic;
     signal CC_REGADDR: std_logic_vector(7 downto 0);
@@ -93,7 +109,10 @@ architecture vga_port_test_arc of vga_port_test is
     signal pixel_x_s, pixel_y_s : unsigned(9 downto 0);
     signal RGB_s : std_logic_vector(11 downto 0);
     signal cam_xvclk : std_logic;
-    
+    signal dvp_test : std_logic_vector(7 downto 0);
+    signal line_counter : integer range 0 to 1023;
+    signal debug_10bit : std_logic_vector(9 downto 0);
+    signal last_C_HR, lastPclk : std_logic := '0';
     --general
     signal RST : std_logic;
     signal C_PWDN_s : std_logic := '0';
@@ -101,16 +120,35 @@ architecture vga_port_test_arc of vga_port_test is
     --i2c
     type camcom_states is (ini, command, wait_i2c, display);
     signal camcom_state : camcom_states := ini;
+    
+    --Block memory
+    signal ram_clka_s, ram_clkb_s, ram_ena_s : std_logic;
+    signal ram_addra_s, ram_addrb_s : std_logic_vector(16 downto 0);
+    signal ram_din_s, ram_dout_s : std_logic_vector(7 downto 0);
 begin
 --Combinational Logic:
 --Camera control
 
 C_PWDN <= BTND;
-C_Pclk <= 'Z';
 C_XVclk <= cam_xvclk; --cam_xvclk;
+process(CLK100MHZ)
+begin
+if(CLK100MHZ'event and CLK100MHZ = '1') then
+		
+		if (C_HR = '1' AND last_C_HR = '0') then
+			line_counter <= 0;
+		elsif(C_Pclk = '1' and lastPclk = '0') then
+			line_counter <= line_counter + 1;
+		end if;
+		last_C_HR <= C_HR;
+		lastPclk <= C_Pclk;
+	end if;
+end process;
 
-
-
+debug_10bit <= std_logic_vector(to_unsigned(line_counter, 10));
+LED16_R <= debug_10bit(9);
+LED16_G <= debug_10bit(8);
+JC <= debug_10bit(7 downto 0);
 with C_HR select rgb_mask <=  (others => '0') when '0',
                                 (others => '1') when others;
 RST <= BTNR;
@@ -127,10 +165,16 @@ with SW(0) select
 -- RGB_S(11 downto 8) and 
 -- RGB_s(7 downto 4) and 
 -- RGB_s(3 downto 0) and
-VGA_R <= rgb_mask and C_D(7 downto 4);
-VGA_G <= rgb_mask and C_D(7 downto 4);
-VGA_B <= rgb_mask and C_D(7 downto 4);
+-- debug
+VGA_R <= C_D(7 downto 4);
+VGA_G <= C_D(7 downto 4);
+VGA_B <= C_D(7 downto 4);
+dvp_test <= C_D;
+JD <= dvp_test;
 
+LED16_B <= C_Pclk;
+
+	
 --Sequential logic
 camera_command : process(CLK100MHZ)
     begin
@@ -184,9 +228,9 @@ pixel_presc: prescaler_4 port map ( CLK     => CLK100MHZ,
                        port map (   CLK => CLK100MHZ,
                                     RST => RST,
                                     CLK4 => cam_xvclk);
-   --Instanciació i2c master:
+   --Instanciació camera controller:
    
-   uut: cam_com generic map ( slave_addr => x"42",
+   camera_controller: cam_com generic map ( slave_addr => x"42",
                                ini_us => 1)
                      port map ( CLK        => CLK100MHZ,
                                 RST        => RST,
@@ -199,5 +243,15 @@ pixel_presc: prescaler_4 port map ( CLK     => CLK100MHZ,
                                 ERROR   => CC_ERROR,
                                 Data    => CC_Data,
                                 Data_rd	=> CC_Data_rd);
+	--Instanciació memoria:
+	block_memory_0: blk_mem_gen_0 
+					port map (	clka => ram_clka_s,
+								ena =>	ram_ena_s,
+								addra => ram_addra_s,
+								dina => ram_din_s,
+								clkb => ram_clkb_s,
+								addrb => ram_addrb_s,
+								doutb => ram_dout_s);
+	                                
 
 end vga_port_test_arc;

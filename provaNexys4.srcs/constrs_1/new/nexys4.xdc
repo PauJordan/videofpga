@@ -47,9 +47,9 @@ set_property -dict {PACKAGE_PIN V14 IOSTANDARD LVCMOS33} [get_ports {LED[13]}]
 set_property -dict {PACKAGE_PIN V12 IOSTANDARD LVCMOS33} [get_ports {LED[14]}]
 set_property -dict {PACKAGE_PIN V11 IOSTANDARD LVCMOS33} [get_ports {LED[15]}]
 
-#set_property -dict { PACKAGE_PIN R12   IOSTANDARD LVCMOS33 } [get_ports { LED16_B }]; #IO_L5P_T0_D06_14 Sch=led16_b
-#set_property -dict { PACKAGE_PIN M16   IOSTANDARD LVCMOS33 } [get_ports { LED16_G }]; #IO_L10P_T1_D14_14 Sch=led16_g
-#set_property -dict { PACKAGE_PIN N15   IOSTANDARD LVCMOS33 } [get_ports { LED16_R }]; #IO_L11P_T1_SRCC_14 Sch=led16_r
+set_property -dict {PACKAGE_PIN R12 IOSTANDARD LVCMOS33} [get_ports LED16_B]
+set_property -dict {PACKAGE_PIN M16 IOSTANDARD LVCMOS33} [get_ports LED16_G]
+set_property -dict {PACKAGE_PIN N15 IOSTANDARD LVCMOS33} [get_ports LED16_R]
 #set_property -dict { PACKAGE_PIN G14   IOSTANDARD LVCMOS33 } [get_ports { LED17_B }]; #IO_L15N_T2_DQS_ADV_B_15 Sch=led17_b
 #set_property -dict { PACKAGE_PIN R11   IOSTANDARD LVCMOS33 } [get_ports { LED17_G }]; #IO_0_14 Sch=led17_g
 #set_property -dict { PACKAGE_PIN N16   IOSTANDARD LVCMOS33 } [get_ports { LED17_R }]; #IO_L11N_T1_SRCC_14 Sch=led17_r
@@ -81,11 +81,11 @@ set_property -dict {PACKAGE_PIN V11 IOSTANDARD LVCMOS33} [get_ports {LED[15]}]
 
 #set_property -dict { PACKAGE_PIN C12   IOSTANDARD LVCMOS33 } [get_ports { CPU_RESETN }]; #IO_L3P_T0_DQS_AD1P_15 Sch=cpu_resetn
 
-set_property -dict { PACKAGE_PIN N17   IOSTANDARD LVCMOS33 } [get_ports { BTNC }]; #IO_L9P_T1_DQS_14 Sch=btnc
+set_property -dict {PACKAGE_PIN N17 IOSTANDARD LVCMOS33} [get_ports BTNC]
 #set_property -dict { PACKAGE_PIN M18   IOSTANDARD LVCMOS33 } [get_ports { BTNU }]; #IO_L4N_T0_D05_14 Sch=btnu
 #set_property -dict { PACKAGE_PIN P17   IOSTANDARD LVCMOS33 } [get_ports { BTNL }]; #IO_L12P_T1_MRCC_14 Sch=btnl
 set_property -dict {PACKAGE_PIN M17 IOSTANDARD LVCMOS33} [get_ports BTNR]
-set_property -dict { PACKAGE_PIN P18   IOSTANDARD LVCMOS33 } [get_ports { BTND }]; #IO_L9N_T1_DQS_D13_14 Sch=btnd
+set_property -dict {PACKAGE_PIN P18 IOSTANDARD LVCMOS33} [get_ports BTND]
 
 
 ##Pmod Headers
@@ -117,14 +117,14 @@ set_property -dict {PACKAGE_PIN H16 IOSTANDARD LVCMOS33} [get_ports C_XVclk]
 
 ##Pmod Header JC
 
-#set_property -dict {PACKAGE_PIN K1 IOSTANDARD LVCMOS33} [get_ports {JC[0]}]
-#set_property -dict {PACKAGE_PIN F6 IOSTANDARD LVCMOS33} [get_ports {JC[1]}]
-#set_property -dict {PACKAGE_PIN J2 IOSTANDARD LVCMOS33} [get_ports {JC[2]}]
-#set_property -dict { PACKAGE_PIN G6    IOSTANDARD LVCMOS33 } [get_ports { JC[4] }]; #IO_L19P_T3_35 Sch=jc[4]
-#set_property -dict { PACKAGE_PIN E7    IOSTANDARD LVCMOS33 } [get_ports { JC[7] }]; #IO_L6P_T0_35 Sch=jc[7]
-#set_property -dict { PACKAGE_PIN J3    IOSTANDARD LVCMOS33 } [get_ports { JC[8] }]; #IO_L22P_T3_35 Sch=jc[8]
-#set_property -dict { PACKAGE_PIN J4    IOSTANDARD LVCMOS33 } [get_ports { JC[9] }]; #IO_L21P_T3_DQS_35 Sch=jc[9]
-#set_property -dict { PACKAGE_PIN E6    IOSTANDARD LVCMOS33 } [get_ports { JC[10] }]; #IO_L5P_T0_AD13P_35 Sch=jc[10]
+set_property -dict {PACKAGE_PIN K1 IOSTANDARD LVCMOS33} [get_ports {JC[0]}]
+set_property -dict {PACKAGE_PIN F6 IOSTANDARD LVCMOS33} [get_ports {JC[1]}]
+set_property -dict {PACKAGE_PIN J2 IOSTANDARD LVCMOS33} [get_ports {JC[2]}]
+set_property -dict {PACKAGE_PIN G6 IOSTANDARD LVCMOS33} [get_ports {JC[3]}]
+set_property -dict {PACKAGE_PIN E7 IOSTANDARD LVCMOS33} [get_ports {JC[4]}]
+set_property -dict {PACKAGE_PIN J3 IOSTANDARD LVCMOS33} [get_ports {JC[5]}]
+set_property -dict {PACKAGE_PIN J4 IOSTANDARD LVCMOS33} [get_ports {JC[6]}]
+set_property -dict {PACKAGE_PIN E6 IOSTANDARD LVCMOS33} [get_ports {JC[7]}]
 
 
 ##Pmod Header JD
@@ -137,6 +137,17 @@ set_property -dict {PACKAGE_PIN H16 IOSTANDARD LVCMOS33} [get_ports C_XVclk]
 #set_property -dict { PACKAGE_PIN G4    IOSTANDARD LVCMOS33 } [get_ports { JD[8] }]; #IO_L20P_T3_35 Sch=jd[8]
 #set_property -dict { PACKAGE_PIN G2    IOSTANDARD LVCMOS33 } [get_ports { JD[9] }]; #IO_L15N_T2_DQS_35 Sch=jd[9]
 #set_property -dict { PACKAGE_PIN F3    IOSTANDARD LVCMOS33 } [get_ports { JD[10] }]; #IO_L13N_T2_MRCC_35 Sch=jd[10]
+
+##Pmod Header JD modificat
+
+set_property -dict {PACKAGE_PIN H4 IOSTANDARD LVCMOS33} [get_ports {JD[0]}]
+set_property -dict {PACKAGE_PIN H1 IOSTANDARD LVCMOS33} [get_ports {JD[1]}]
+set_property -dict {PACKAGE_PIN G1 IOSTANDARD LVCMOS33} [get_ports {JD[2]}]
+set_property -dict {PACKAGE_PIN G3 IOSTANDARD LVCMOS33} [get_ports {JD[3]}]
+set_property -dict {PACKAGE_PIN H2 IOSTANDARD LVCMOS33} [get_ports {JD[4]}]
+set_property -dict {PACKAGE_PIN G4 IOSTANDARD LVCMOS33} [get_ports {JD[5]}]
+set_property -dict {PACKAGE_PIN G2 IOSTANDARD LVCMOS33} [get_ports {JD[6]}]
+set_property -dict {PACKAGE_PIN F3 IOSTANDARD LVCMOS33} [get_ports {JD[7]}]
 
 
 ##Pmod Header JXADC
@@ -273,6 +284,11 @@ connect_debug_port u_ila_0/probe5 [get_nets [list i2c_master_1/ack_error]]
 connect_debug_port u_ila_0/probe6 [get_nets [list i2c_master_1/i2c_busy]]
 
 
+
+
+connect_debug_port u_ila_0/probe0 [get_nets [list {C_D_IBUF[0]} {C_D_IBUF[1]} {C_D_IBUF[2]} {C_D_IBUF[3]}]]
+connect_debug_port u_ila_0/probe1 [get_nets [list {VGA_B_OBUF[0]} {VGA_B_OBUF[1]} {VGA_B_OBUF[2]} {VGA_B_OBUF[3]}]]
+
 create_debug_core u_ila_0 ila
 set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
 set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
@@ -285,21 +301,28 @@ set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
 set_property port_width 1 [get_debug_ports u_ila_0/clk]
 connect_debug_port u_ila_0/clk [get_nets [list CLK100MHZ_IBUF_BUFG]]
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
-set_property port_width 1 [get_debug_ports u_ila_0/probe0]
-connect_debug_port u_ila_0/probe0 [get_nets [list C_SCL_TRI]]
+set_property port_width 8 [get_debug_ports u_ila_0/probe0]
+connect_debug_port u_ila_0/probe0 [get_nets [list {JD_OBUF[0]} {JD_OBUF[1]} {JD_OBUF[2]} {JD_OBUF[3]} {JD_OBUF[4]} {JD_OBUF[5]} {JD_OBUF[6]} {JD_OBUF[7]}]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe1]
-set_property port_width 1 [get_debug_ports u_ila_0/probe1]
-connect_debug_port u_ila_0/probe1 [get_nets [list C_SDA_TRI]]
+set_property port_width 8 [get_debug_ports u_ila_0/probe1]
+connect_debug_port u_ila_0/probe1 [get_nets [list {JC_OBUF[0]} {JC_OBUF[1]} {JC_OBUF[2]} {JC_OBUF[3]} {JC_OBUF[4]} {JC_OBUF[5]} {JC_OBUF[6]} {JC_OBUF[7]}]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe2]
 set_property port_width 1 [get_debug_ports u_ila_0/probe2]
-connect_debug_port u_ila_0/probe2 [get_nets [list C_SCL_IBUF]]
+connect_debug_port u_ila_0/probe2 [get_nets [list LED16_R_OBUF]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe3]
 set_property port_width 1 [get_debug_ports u_ila_0/probe3]
-connect_debug_port u_ila_0/probe3 [get_nets [list C_SDA_IBUF]]
-
+connect_debug_port u_ila_0/probe3 [get_nets [list VGA_HS_OBUF]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe4]
+set_property port_width 1 [get_debug_ports u_ila_0/probe4]
+connect_debug_port u_ila_0/probe4 [get_nets [list VGA_VS_OBUF]]
+create_debug_port u_ila_0 probe
+set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe5]
+set_property port_width 1 [get_debug_ports u_ila_0/probe5]
+connect_debug_port u_ila_0/probe5 [get_nets [list LED16_G_OBUF]]
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
 set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
