@@ -6,6 +6,10 @@
 ## Clock signal
 set_property -dict {PACKAGE_PIN E3 IOSTANDARD LVCMOS33} [get_ports CLK100MHZ]
 create_clock -period 10.000 -name sys_clk_pin -waveform {0.000 5.000} -add [get_ports CLK100MHZ]
+create_clock -period 40.000 -name pixel_clk_pin -waveform {0.000 20.000} -add [get_ports C_Pclk]
+##xapuza numero 1
+#set_property CLOCK_DEDICATED_ROUTE FALSE [get_nets C_Pclk_IBUF]
+
 
 
 ##Switches
@@ -111,8 +115,8 @@ set_property -dict {PACKAGE_PIN G16 IOSTANDARD LVCMOS33} [get_ports {C_D[5]}]
 set_property -dict {PACKAGE_PIN H14 IOSTANDARD LVCMOS33} [get_ports {C_D[7]}]
 set_property -dict {PACKAGE_PIN E16 IOSTANDARD LVCMOS33} [get_ports C_SDA]
 set_property -dict {PACKAGE_PIN F13 IOSTANDARD LVCMOS33} [get_ports C_SCL]
-set_property -dict {PACKAGE_PIN G13 IOSTANDARD LVCMOS33} [get_ports C_Pclk]
-set_property -dict {PACKAGE_PIN H16 IOSTANDARD LVCMOS33} [get_ports C_XVclk]
+set_property -dict {PACKAGE_PIN G13 IOSTANDARD LVCMOS33} [get_ports C_XVclk]
+set_property -dict {PACKAGE_PIN H16 IOSTANDARD LVCMOS33} [get_ports C_Pclk]
 
 
 ##Pmod Header JC
@@ -289,6 +293,18 @@ connect_debug_port u_ila_0/probe6 [get_nets [list i2c_master_1/i2c_busy]]
 connect_debug_port u_ila_0/probe0 [get_nets [list {C_D_IBUF[0]} {C_D_IBUF[1]} {C_D_IBUF[2]} {C_D_IBUF[3]}]]
 connect_debug_port u_ila_0/probe1 [get_nets [list {VGA_B_OBUF[0]} {VGA_B_OBUF[1]} {VGA_B_OBUF[2]} {VGA_B_OBUF[3]}]]
 
+connect_debug_port u_ila_0/probe0 [get_nets [list {JD_OBUF[0]} {JD_OBUF[1]} {JD_OBUF[2]} {JD_OBUF[3]} {JD_OBUF[4]} {JD_OBUF[5]} {JD_OBUF[6]} {JD_OBUF[7]}]]
+connect_debug_port u_ila_0/probe1 [get_nets [list {JC_OBUF[0]} {JC_OBUF[1]} {JC_OBUF[2]} {JC_OBUF[3]} {JC_OBUF[4]} {JC_OBUF[5]} {JC_OBUF[6]} {JC_OBUF[7]}]]
+connect_debug_port u_ila_0/probe2 [get_nets [list LED16_R_OBUF]]
+connect_debug_port u_ila_0/probe5 [get_nets [list LED16_G_OBUF]]
+
+
+
+connect_debug_port u_ila_0/probe5 [get_nets [list block_memory_0/ena]]
+
+
+connect_debug_port u_ila_0/probe5 [get_nets [list pixel_counter_0/odd_reg_n_0]]
+
 create_debug_core u_ila_0 ila
 set_property ALL_PROBE_SAME_MU true [get_debug_cores u_ila_0]
 set_property ALL_PROBE_SAME_MU_CNT 1 [get_debug_cores u_ila_0]
@@ -299,31 +315,27 @@ set_property C_INPUT_PIPE_STAGES 0 [get_debug_cores u_ila_0]
 set_property C_TRIGIN_EN false [get_debug_cores u_ila_0]
 set_property C_TRIGOUT_EN false [get_debug_cores u_ila_0]
 set_property port_width 1 [get_debug_ports u_ila_0/clk]
-connect_debug_port u_ila_0/clk [get_nets [list CLK100MHZ_IBUF_BUFG]]
+connect_debug_port u_ila_0/clk [get_nets [list C_Pclk_IBUF_BUFG]]
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe0]
 set_property port_width 8 [get_debug_ports u_ila_0/probe0]
-connect_debug_port u_ila_0/probe0 [get_nets [list {JD_OBUF[0]} {JD_OBUF[1]} {JD_OBUF[2]} {JD_OBUF[3]} {JD_OBUF[4]} {JD_OBUF[5]} {JD_OBUF[6]} {JD_OBUF[7]}]]
+connect_debug_port u_ila_0/probe0 [get_nets [list {P_Y[1]} {P_Y[2]} {P_Y[3]} {P_Y[4]} {P_Y[5]} {P_Y[6]} {P_Y[7]} {P_Y[8]}]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe1]
-set_property port_width 8 [get_debug_ports u_ila_0/probe1]
-connect_debug_port u_ila_0/probe1 [get_nets [list {JC_OBUF[0]} {JC_OBUF[1]} {JC_OBUF[2]} {JC_OBUF[3]} {JC_OBUF[4]} {JC_OBUF[5]} {JC_OBUF[6]} {JC_OBUF[7]}]]
+set_property port_width 9 [get_debug_ports u_ila_0/probe1]
+connect_debug_port u_ila_0/probe1 [get_nets [list {P_X[1]} {P_X[2]} {P_X[3]} {P_X[4]} {P_X[5]} {P_X[6]} {P_X[7]} {P_X[8]} {P_X[9]}]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe2]
 set_property port_width 1 [get_debug_ports u_ila_0/probe2]
-connect_debug_port u_ila_0/probe2 [get_nets [list LED16_R_OBUF]]
+connect_debug_port u_ila_0/probe2 [get_nets [list {pixel_counter_0/line_i[0]}]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe3]
 set_property port_width 1 [get_debug_ports u_ila_0/probe3]
-connect_debug_port u_ila_0/probe3 [get_nets [list VGA_HS_OBUF]]
+connect_debug_port u_ila_0/probe3 [get_nets [list {pixel_counter_0/pixel_i[0]}]]
 create_debug_port u_ila_0 probe
 set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe4]
 set_property port_width 1 [get_debug_ports u_ila_0/probe4]
-connect_debug_port u_ila_0/probe4 [get_nets [list VGA_VS_OBUF]]
-create_debug_port u_ila_0 probe
-set_property PROBE_TYPE DATA_AND_TRIGGER [get_debug_ports u_ila_0/probe5]
-set_property port_width 1 [get_debug_ports u_ila_0/probe5]
-connect_debug_port u_ila_0/probe5 [get_nets [list LED16_G_OBUF]]
+connect_debug_port u_ila_0/probe4 [get_nets [list pixel_counter_0/C_VS_IBUF]]
 set_property C_CLK_INPUT_FREQ_HZ 300000000 [get_debug_cores dbg_hub]
 set_property C_ENABLE_CLK_DIVIDER false [get_debug_cores dbg_hub]
 set_property C_USER_SCAN_CHAIN 1 [get_debug_cores dbg_hub]
-connect_debug_port dbg_hub/clk [get_nets CLK100MHZ_IBUF_BUFG]
+connect_debug_port dbg_hub/clk [get_nets C_Pclk_IBUF_BUFG]

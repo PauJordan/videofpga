@@ -86,8 +86,7 @@ architecture vga_port_test_arc of vga_port_test is
   	component blk_mem_gen_0 IS
   	  Port (
   	    clka : IN STD_LOGIC;
-  	    ena : IN STD_LOGIC;
-  	    --wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
+  	    wea : IN STD_LOGIC_VECTOR(0 DOWNTO 0);
   	    addra : IN STD_LOGIC_VECTOR(16 DOWNTO 0);
   	    dina : IN STD_LOGIC_VECTOR(7 DOWNTO 0);
   	    clkb : IN STD_LOGIC;
@@ -95,6 +94,16 @@ architecture vga_port_test_arc of vga_port_test is
   	    doutb : OUT STD_LOGIC_VECTOR(7 DOWNTO 0)
   	  );
   	end component;
+  	
+  	component pixel_counter
+		port (HR   : in std_logic;
+			  VS   : in std_logic;
+			  CLK  : in std_logic;
+			  RST  : in std_logic;
+			  P_X  : out std_logic_vector (9 downto 0);
+			  P_Y  : out std_logic_vector (8 downto 0);
+			  P_EN : out std_logic);
+  	    end component;
   	
   --Cam com signals
     signal CC_ENABLE, CC_BUSY: std_logic;
@@ -122,58 +131,74 @@ architecture vga_port_test_arc of vga_port_test is
     signal camcom_state : camcom_states := ini;
     
     --Block memory
-    signal ram_clka_s, ram_clkb_s, ram_ena_s : std_logic;
+    signal ram_clka_s, ram_clkb_s : std_logic;
     signal ram_addra_s, ram_addrb_s : std_logic_vector(16 downto 0);
     signal ram_din_s, ram_dout_s : std_logic_vector(7 downto 0);
+    signal ram_ena_s : std_logic_vector(0 downto 0);
+    --pixel counter
+    signal counter_x_s : std_logic_vector(9 downto 0);
+    signal counter_y_s : std_logic_vector(8 downto 0);
+    signal counter_en_s : std_logic;
 begin
 --Combinational Logic:
---Camera control
+	--main RST
+	RST <= BTNR;
 
-C_PWDN <= BTND;
-C_XVclk <= cam_xvclk; --cam_xvclk;
-process(CLK100MHZ)
-begin
-if(CLK100MHZ'event and CLK100MHZ = '1') then
-		
-		if (C_HR = '1' AND last_C_HR = '0') then
-			line_counter <= 0;
-		elsif(C_Pclk = '1' and lastPclk = '0') then
-			line_counter <= line_counter + 1;
-		end if;
-		last_C_HR <= C_HR;
-		lastPclk <= C_Pclk;
-	end if;
-end process;
+	--Camera control (mainly testing)
+	C_PWDN <= BTND; --camera powerdown
+	C_XVclk <= cam_xvclk; --cam_xvclk; camera system clock
+	
+	--process(CLK100MHZ)
+	--begin
+	--if(CLK100MHZ'event and CLK100MHZ = '1') then
+			
+	--		if (C_HR = '1' AND last_C_HR = '0') then
+	--			line_counter <= 0;
+	--		elsif(C_Pclk = '1' and lastPclk = '0') then
+	--			line_counter <= line_counter + 1;
+	--		end if;
+	--		last_C_HR <= C_HR;
+	--		lastPclk <= C_Pclk;
+	--	end if;
+	--end process;
+	
+	--debug_10bit <= std_logic_vector(to_unsigned(line_counter, 10));
+	--LED16_R <= debug_10bit(9);
+	--LED16_G <= debug_10bit(8);
+	--	LED16_B <= C_Pclk;
+	--JC <= debug_10bit(7 downto 0);
+	--with C_HR select rgb_mask <=  (others => '0') when '0',
+	--                                (others => '1') when others;
 
-debug_10bit <= std_logic_vector(to_unsigned(line_counter, 10));
-LED16_R <= debug_10bit(9);
-LED16_G <= debug_10bit(8);
-JC <= debug_10bit(7 downto 0);
-with C_HR select rgb_mask <=  (others => '0') when '0',
-                                (others => '1') when others;
-RST <= BTNR;
+	--vga testing
+	--with SW(0) select
+	--VGA_VS <= 	C_VS when '0',
+	--				VGA_VS_s when others;
+	--with SW(0) select
+	--	VGA_HS <= 	C_HR when '0',
+	--				VGA_HR_s when others;
+	-- RGB_S(11 downto 8) and 
+	-- RGB_s(7 downto 4) and 
+	-- RGB_s(3 downto 0) and
+	
+	--VGA_R <= C_D(7 downto 4);
+	--VGA_G <= C_D(7 downto 4);
+	--VGA_B <= C_D(7 downto 4);
+	--dvp_test <= C_D;
+	--JD <= dvp_test;
 
-with SW(0) select
-	VGA_VS <= 	C_VS when '0',
-				VGA_VS_s when others;
-with SW(0) select
-	VGA_HS <= 	C_HR when '0',
-				VGA_HR_s when others;
-		
-
-
--- RGB_S(11 downto 8) and 
--- RGB_s(7 downto 4) and 
--- RGB_s(3 downto 0) and
--- debug
-VGA_R <= C_D(7 downto 4);
-VGA_G <= C_D(7 downto 4);
-VGA_B <= C_D(7 downto 4);
-dvp_test <= C_D;
-JD <= dvp_test;
-
-LED16_B <= C_Pclk;
-
+	--block memory read test
+	VGA_HS <= VGA_HR_s;
+	VGA_VS <= VGA_VS_s;
+	VGA_R <= ram_dout_s(7 downto 4);
+	VGA_G <= ram_dout_s(7 downto 4);
+	VGA_B <= ram_dout_s(7 downto 4);
+	ram_addrb_s(8 downto 0) <= std_logic_vector(pixel_x_s(9 downto 1));
+	ram_addrb_s(16 downto 9) <= std_logic_vector(pixel_y_s(8 downto 1));
+	ram_clkb_s <= CLK100MHZ;
+	ram_addra_s(8 downto 0) <= counter_x_s(9 downto 1);
+	ram_addra_s(16 downto 9) <= counter_y_s(8 downto 1);
+	ram_ena_s(0) <= counter_en_s;
 	
 --Sequential logic
 camera_command : process(CLK100MHZ)
@@ -245,13 +270,21 @@ pixel_presc: prescaler_4 port map ( CLK     => CLK100MHZ,
                                 Data_rd	=> CC_Data_rd);
 	--Instanciació memoria:
 	block_memory_0: blk_mem_gen_0 
-					port map (	clka => ram_clka_s,
-								ena =>	ram_ena_s,
+					port map (	clka => C_Pclk,						
+								wea =>	ram_ena_s,
 								addra => ram_addra_s,
-								dina => ram_din_s,
+								dina => C_D,
 								clkb => ram_clkb_s,
 								addrb => ram_addrb_s,
 								doutb => ram_dout_s);
+	pixel_counter_0: pixel_counter
+					port map (HR   => C_HR,
+							  VS   => C_VS,
+							  CLK  => C_Pclk,
+							  RST  => RST,
+							  P_X  => counter_x_s,
+							  P_Y  => counter_y_s,
+							  P_EN => counter_en_s);
 	                                
 
 end vga_port_test_arc;
